@@ -8,6 +8,7 @@ import { CreateUserDto, UpdateUserDto } from '../dtos/user.dto';
 
 import { ProductsService } from './../../products/services/products.service';
 import { CustomersService } from './customers.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -35,10 +36,18 @@ export class UsersService {
     return user;
   }
 
+  async findByMail(email: string) {
+    return await this.userRepo.findOne({ where: { email: email } });
+  }
+
   async create(data: CreateUserDto) {
     // equialente a hacer const new product = new Product pero con la ayuda de typeorm
     // busca los campos coinsidetes, en pocas palabras lo ahce de forma dinamica
     const newUser = this.userRepo.create(data);
+
+    //encriptando el password
+    const hashPassword = await bcrypt.hash(newUser.password, 10);
+    newUser.password = hashPassword;
     // verifica si el request que se opasa trae la data y si la trae ejecuta esta otra
     // funcion que asigna el customer al usuario y luego hace el guardado
     if (data.customerId) {
